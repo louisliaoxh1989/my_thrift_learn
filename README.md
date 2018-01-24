@@ -326,6 +326,133 @@ transport.open();
 // 调用服务的 helloVoid 方法
 client.helloVoid(); 
 transport.close();
-
 					
+```
+
+## 5. Thrift 异步客户端构建
+
+```
+Thrift 提供非阻塞的调用方式，可构建异步客户端。
+
+在这种方式中，Thrift 提供了新的类 TAsyncClientManager 用于管理客户端的请求
+
+在一个线程上追踪请求和响应，同时通过接口 AsyncClient 传递标准的参数和 callback 对象
+
+服务调用完成后，callback 提供了处理调用结果和异常的方法。
+
+首先我们看 callback 的实现：
+
+```
+
+``` java
+ import org.apache.thrift.async.AsyncMethodCallback; 
+
+ public class MethodCallback implements AsyncMethodCallback { 
+    Object response = null; 
+
+    public Object getResult() { 
+        // 返回结果值
+        return this.response; 
+    } 
+
+    // 处理服务返回的结果值
+    @Override 
+    public void onComplete(Object response) { 
+        this.response = response; 
+    } 
+    // 处理调用服务过程中出现的异常
+    @Override 
+    public void onError(Throwable throwable) { 
+
+    } 
+ } 
+```
+```
+如代码所示，onComplete 方法接收服务处理后的结果，此处我们将结果 response 直接赋值给 callback 的私有属性 response。
+
+onError 方法接收服务处理过程中抛出的异常，此处未对异常进行处理。
+
+创建非阻塞服务器端实现代码，将 HelloServiceImpl 作为具体的处理器传递给异步 Thrift 服务器，代码如下：
+```
+
+```
+import org.apache.thrift.server.TNonblockingServer; 
+ import org.apache.thrift.server.TServer; 
+ import org.apache.thrift.transport.TNonblockingServerSocket; 
+ import org.apache.thrift.transport.TNonblockingServerTransport; 
+ import org.apache.thrift.transport.TTransportException; 
+ import service.demo.Hello; 
+ import service.demo.HelloServiceImpl; 
+
+ public class HelloServiceAsyncServer { 
+    /** 
+     * 启动 Thrift 异步服务器
+     * @param args 
+     */ 
+    public static void main(String[] args) { 
+        TNonblockingServerTransport serverTransport; 
+        try { 
+            serverTransport = new TNonblockingServerSocket(10005); 
+            Hello.Processor processor = new Hello.Processor( 
+                    new HelloServiceImpl()); 
+            TServer server = new TNonblockingServer(processor, serverTransport); 
+            System.out.println("Start server on port 10005 ..."); 
+            server.serve(); 
+        } catch (TTransportException e) { 
+            e.printStackTrace(); 
+        } 
+    } 
+ } 
+```
+
+```
+HelloServiceAsyncServer 通过 java.nio.channels.ServerSocketChannel 创建非阻塞的服务器端等待客户端的连接。
+
+创建异步客户端实现代码:
+    调用 Hello.AsyncClient 访问服务端的逻辑实现，将 MethodCallback 对象作为参数传入调用方法中，代码如下：
+```
+``` java
+import java.io.IOException; 
+ import org.apache.thrift.async.AsyncMethodCallback; 
+ import org.apache.thrift.async.TAsyncClientManager; 
+ import org.apache.thrift.protocol.TBinaryProtocol; 
+ import org.apache.thrift.protocol.TProtocolFactory; 
+ import org.apache.thrift.transport.TNonblockingSocket; 
+ import org.apache.thrift.transport.TNonblockingTransport; 
+ import service.callback.MethodCallback; 
+ import service.demo.Hello; 
+
+ public class HelloServiceAsyncClient { 
+    /** 
+     * 调用 Hello 服务
+     * @param args 
+     */ 
+    public static void main(String[] args) throws Exception { 
+        try { 
+            TAsyncClientManager clientManager = new TAsyncClientManager(); 
+            TNonblockingTransport transport = new TNonblockingSocket( 
+                    "localhost", 10005); 
+            TProtocolFactory protocol = new TBinaryProtocol.Factory(); 
+            Hello.AsyncClient asyncClient = new Hello.AsyncClient(protocol, 
+                    clientManager, transport); 
+            System.out.println("Client calls ....."); 
+            MethodCallback callBack = new MethodCallback(); 
+            asyncClient.helloString("Hello World", callBack); 
+            Object res = callBack.getResult(); 
+            while (res == null) { 
+                res = callBack.getResult(); 
+            } 
+            System.out.println(((Hello.AsyncClient.helloString_call) res) 
+                    .getResult()); 
+        } catch (IOException e) { 
+            e.printStackTrace(); 
+        } 
+  } 
+ } 
+```
+
+```
+HelloServiceAsyncClient 通过 java.nio.channels.Socketchannel 创建异步客户端与服务器建立连接。
+
+在本列中异步客户端通过以下的循环代码实现了同步效果，去除这部分代码后就是完全异步的
 ```
