@@ -22,7 +22,11 @@ Transport定义了消息在客户端和服务端如何通信。常见的是TSock
 ### (3) Server
 
 ```
-Server从transport端接收序列化后的消息，根据protocal反序列化回来，然后调用用户实现的消息handler(接口实现类)，最后把返回的数据序列化后再传回给客户端。常见的TServer为TSimpleServer，THsHaServer，TThreadPoolServer，TNonBlockingServer，TThreadedSelectorServer。下面会具体介绍各个Server的特点，开发者需要选择适合自己场景的一套 Server+对应的Transport+对应的Protocol。
+Server从transport端接收序列化后的消息，根据protocal反序列化回来，然后调用用户实现的消息handler(接口实现类)，
+
+最后把返回的数据序列化后再传回给客户端。常见的TServer为TSimpleServer，THsHaServer，TThreadPoolServer，
+
+TNonBlockingServer，TThreadedSelectorServer。下面会具体介绍各个Server的特点，开发者需要选择适合自己场景的一套 Server+对应的Transport+对应的Protocol。
 
 ```
 ## 2. TServer说明
@@ -41,13 +45,17 @@ TSimpleServer在sever端只有一个I/O阻塞的单线程，每次只接受并�
 
 ```
 
-TNonblockingServer修改了TSimpleServer里阻塞的缺点，借助NIO里的Selector实现非阻塞I/O，允许多个客户端连接并且客户端可以使用select()选择。但是处理消息和select()的是同一个线程，当有大量客户端连接的时候，性能是不理想的。
+TNonblockingServer修改了TSimpleServer里阻塞的缺点，借助NIO里的Selector实现非阻塞I/O，允许多个客户端连接并且客户端可以使用select()选择。
+
+但是处理消息和select()的是同一个线程，当有大量客户端连接的时候，性能是不理想的。
 
 ```
 ### (3) THsHaServer
 
 ```
-THsHaServer(半同步半异步server)在以上基础上，使用一个单独线程来处理网络I/O，一个worker线程池来处理消息。好处是只要有空闲worker线程，消息可以被及时、并行处理，吞吐量会大一些。
+THsHaServer(半同步半异步server)在以上基础上，使用一个单独线程来处理网络I/O，一个worker线程池来处理消息。
+
+好处是只要有空闲worker线程，消息可以被及时、并行处理，吞吐量会大一些。
 
 ```
 
@@ -55,20 +63,29 @@ THsHaServer(半同步半异步server)在以上基础上，使用一个单独线�
 ```
 这个用得最多
 
-TThreadedSelectorServer，与THsHaServer的区别是处理网络I/O也是多线程了，它维护两个线程池，一个负责网络I/O，一个负责数据处理。优点是当网络I/O是瓶颈的情况下，性能比THsHaServer更好。
+TThreadedSelectorServer，与THsHaServer的区别是处理网络I/O也是多线程了，它维护两个线程池，一个负责网络I/O，一个负责数据处理。
+优点是当网络I/O是瓶颈的情况下，性能比THsHaServer更好。
 ```
 ### (5) TThreadPoolServer
 
 ```
 
-TThreadPoolServer有一个专用的线程来接收connections，连接被建立后，会从ThreadPoolExecutor里取一个工作线程来负责这次连接，直到连接断开后线程回到线程池里，且线程池大小可配。也就是说，并发性的大小可根据服务器设定，如果不介意开很多线程的话，TThreadPoolServer是个还不错的选择。
+TThreadPoolServer有一个专用的线程来接收connections，连接被建立后，会从ThreadPoolExecutor里取一个工作线程来负责这次连接
+
+直到连接断开后线程回到线程池里，且线程池大小可配。也就是说，并发性的大小可根据服务器设定，如果不介意开很多线程的话，
+
+TThreadPoolServer是个还不错的选择。
 
 ```
 
 ## 3. 协议介绍
 
 ```
-Thrift 可以让用户选择客户端与服务端之间传输通信协议的类别，在传输协议上总体划分为文本 (text) 和二进制 (binary) 传输协议，为节约带宽，提高传输效率，一般情况下使用二进制类型的传输协议为多数，有时还会使用基于文本类型的协议，这需要根据项目 / 产品中的实际需求。常用协议有以下几种：
+Thrift 可以让用户选择客户端与服务端之间传输通信协议的类别，在传输协议上总体划分为文本 (text) 和二进制 (binary) 传输协议，
+
+为节约带宽，提高传输效率，一般情况下使用二进制类型的传输协议为多数，有时还会使用基于文本类型的协议
+
+这需要根据项目 / 产品中的实际需求。常用协议有以下几种：
 ```
 
 ### (1) TBinaryProtocol二进制编码格式进行数据传输
