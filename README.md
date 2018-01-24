@@ -65,13 +65,13 @@ TThreadPoolServer有一个专用的线程来接收connections，连接被建立�
 
 ```
 
-## 协议介绍
+## 3. 协议介绍
 
 ```
 Thrift 可以让用户选择客户端与服务端之间传输通信协议的类别，在传输协议上总体划分为文本 (text) 和二进制 (binary) 传输协议，为节约带宽，提高传输效率，一般情况下使用二进制类型的传输协议为多数，有时还会使用基于文本类型的协议，这需要根据项目 / 产品中的实际需求。常用协议有以下几种：
 ```
 
-### 1. TBinaryProtocol二进制编码格式进行数据传输
+### (1) TBinaryProtocol二进制编码格式进行数据传输
 
 ```java
  
@@ -146,7 +146,7 @@ Thrift 可以让用户选择客户端与服务端之间传输通信协议的类�
 
 ```
 
-### TCompactProtocol 高效率的、密集的二进制编码格式进行数据传输
+### (2) TCompactProtocol 高效率的、密集的二进制编码格式进行数据传输
 
 ```java
 /* 服务端替换Factory proFactory = new TBinaryProtocol.Factory();  */
@@ -158,7 +158,7 @@ TCompactProtocol.Factory proFactory = new TCompactProtocol.Factory();
 
 ```
 
-### TJSONProtocol —— 使用 JSON 的数据编码协议进行数据传输
+### (3) TJSONProtocol —— 使用 JSON 的数据编码协议进行数据传输
 
 ```java
 /* 服务端替换Factory proFactory = new TBinaryProtocol.Factory();  */
@@ -169,12 +169,12 @@ TJSONProtocol.Factory proFactory = new TJSONProtocol.Factory();
 
 ```
 
-### TSimpleJSONProtocol —— 只提供 JSON 只写的协议，适用于通过脚本语言解析
+### (4) TSimpleJSONProtocol —— 只提供 JSON 只写的协议，适用于通过脚本语言解析
 
 
-## 传输层介绍
+## 4. 传输层介绍
 
-### TSocket —— 使用阻塞式 I/O 进行传输，是最常见的模式
+### (1) TSocket —— 使用阻塞式 I/O 进行传输，是最常见的模式
 
 ```
  /* 服务端 */
@@ -247,7 +247,7 @@ TJSONProtocol.Factory proFactory = new TJSONProtocol.Factory();
  } 
 ```
 
-### TFramedTransport 使用非阻塞方式，按块的大小进行传输
+### (2) TFramedTransport 使用非阻塞方式，按块的大小进行传输
 
 ```
 若使用 TFramedTransport 传输层，其服务器必须修改为非阻塞的服务类型,
